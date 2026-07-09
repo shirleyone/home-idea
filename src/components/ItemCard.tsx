@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link2, Maximize2 } from 'lucide-react';
+import { Link2, Maximize2, Pencil } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { Item } from '../db';
@@ -69,7 +69,7 @@ export function ItemCard({
           </div>
         )}
       </div>
-      <div className="flex flex-1 flex-col gap-2 p-3">
+      <div className="relative flex flex-1 flex-col gap-2 p-3 pr-9">
         <p className="truncate text-sm font-medium text-ink">{item.name || '未命名'}</p>
         {item.tags.length > 0 && (
           <div className="flex flex-wrap gap-1">
@@ -86,6 +86,15 @@ export function ItemCard({
             )}
           </div>
         )}
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            onClick();
+          }}
+          className="absolute bottom-2 right-2 rounded-full border border-line bg-white p-1.5 text-ink-light opacity-0 shadow-sm transition-opacity hover:border-sage hover:text-sage group-hover:opacity-100"
+        >
+          <Pencil size={13} />
+        </div>
       </div>
     </button>
   );
