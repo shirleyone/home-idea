@@ -3,9 +3,9 @@ import { ExternalLink, Loader2, RefreshCw, Trash2 } from 'lucide-react';
 import { Modal } from './Modal';
 import { TagInput } from './TagInput';
 import { FolderPicker } from './FolderPicker';
-import { updateItem } from '../hooks';
+import { updateItem, uploadImage } from '../hooks';
 import type { Folder, Item } from '../db';
-import { useObjectUrl, domainFromUrl, fetchLinkThumbnail } from '../utils';
+import { domainFromUrl, fetchLinkThumbnail } from '../utils';
 
 export function ItemDrawer({
   item,
@@ -25,9 +25,9 @@ export function ItemDrawer({
   const [tags, setTags] = useState(item.tags);
   const [folderIds, setFolderIds] = useState(item.folderIds);
   const [refetching, setRefetching] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [thumbnailFailed, setThumbnailFailed] = useState(false);
-  const imageUrl = useObjectUrl(item.image);
-  const displayUrl = imageUrl ?? (!thumbnailFailed ? item.linkThumbnailUrl : undefined);
+  const displayUrl = item.imageUrl ?? (!thumbnailFailed ? item.linkThumbnailUrl : undefined);
 
   const save = async (changes: Partial<Item>) => {
     await updateItem(item.id, changes);
@@ -39,7 +39,7 @@ export function ItemDrawer({
     try {
       const thumb = await fetchLinkThumbnail(item.linkUrl);
       setThumbnailFailed(false);
-      await save({ linkThumbnailUrl: thumb, image: undefined });
+      await save({ linkThumbnailUrl: thumb, imageUrl: undefined });
     } finally {
       setRefetching(false);
     }
@@ -47,7 +47,14 @@ export function ItemDrawer({
 
   const handleUploadImage = async (file: File | undefined) => {
     if (!file) return;
-    await save({ image: file });
+    setUploading(true);
+    try {
+      const url = await uploadImage(file, item.id, file.name);
+      setThumbnailFailed(false);
+      await save({ imageUrl: url });
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -55,7 +62,7 @@ export function ItemDrawer({
       <div className="flex flex-col gap-4 sm:flex-row">
         <div className="w-full shrink-0 sm:w-56">
           <div className="aspect-[4/3] overflow-hidden rounded-xl bg-cream-dark">
-            {refetching ? (
+            {refetching || uploading ? (
               <div className="flex h-full w-full items-center justify-center text-ink-light">
                 <Loader2 size={20} className="animate-spin" />
               </div>
@@ -94,11 +101,12 @@ export function ItemDrawer({
               </button>
             )}
             <label className="flex w-fit cursor-pointer items-center gap-1 text-xs text-ink-light hover:text-sage">
-              上傳自訂縮圖
+              {uploading ? '上傳中...' : '上傳自訂縮圖'}
               <input
                 type="file"
                 accept="image/png,image/jpeg,image/gif,image/webp"
                 className="hidden"
+                disabled={uploading}
                 onChange={(e) => handleUploadImage(e.target.files?.[0])}
               />
             </label>

@@ -3,12 +3,11 @@ import { Link2 } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { Item } from '../db';
-import { useObjectUrl, domainFromUrl } from '../utils';
+import { domainFromUrl } from '../utils';
 
 export function ItemCard({ item, onClick }: { item: Item; onClick: () => void }) {
-  const imageUrl = useObjectUrl(item.image);
   const [remoteThumbnailFailed, setRemoteThumbnailFailed] = useState(false);
-  const displayUrl = imageUrl ?? (!remoteThumbnailFailed ? item.linkThumbnailUrl : undefined);
+  const displayUrl = item.imageUrl ?? (!remoteThumbnailFailed ? item.linkThumbnailUrl : undefined);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
   });

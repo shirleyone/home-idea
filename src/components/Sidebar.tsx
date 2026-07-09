@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Folder as FolderIcon, Pencil, Plus, Tags, Trash2, X } from 'lucide-react';
+import { Folder as FolderIcon, LogOut, Pencil, Plus, Tags, Trash2, X } from 'lucide-react';
 import type { Folder } from '../db';
 import { addFolder, deleteFolder, renameFolder } from '../hooks';
+import { supabase } from '../supabaseClient';
 import { TagChip } from './TagChip';
 
 export function Sidebar({
@@ -13,6 +14,7 @@ export function Sidebar({
   onToggleTag,
   onOpenTagManager,
   onClose,
+  userEmail,
 }: {
   folders: Folder[];
   allTags: string[];
@@ -22,6 +24,7 @@ export function Sidebar({
   onToggleTag: (tag: string) => void;
   onOpenTagManager: () => void;
   onClose?: () => void;
+  userEmail?: string;
 }) {
   const [newFolderName, setNewFolderName] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -148,6 +151,17 @@ export function Sidebar({
             />
           ))}
         </div>
+      </div>
+
+      <div className="mt-auto flex items-center justify-between border-t border-line pt-3 text-xs text-ink-light">
+        <span className="truncate">{userEmail}</span>
+        <button
+          onClick={() => supabase.auth.signOut()}
+          className="flex shrink-0 items-center gap-1 rounded-full px-2 py-1 hover:bg-cream-dark hover:text-ink"
+        >
+          <LogOut size={12} />
+          登出
+        </button>
       </div>
     </div>
   );

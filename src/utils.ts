@@ -1,21 +1,3 @@
-import { useEffect, useState } from 'react';
-
-export function useObjectUrl(blob?: Blob) {
-  const [url, setUrl] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
-    if (!blob) {
-      setUrl(undefined);
-      return;
-    }
-    const objectUrl = URL.createObjectURL(blob);
-    setUrl(objectUrl);
-    return () => URL.revokeObjectURL(objectUrl);
-  }, [blob]);
-
-  return url;
-}
-
 export function domainFromUrl(url: string) {
   try {
     return new URL(url).hostname.replace(/^www\./, '');
