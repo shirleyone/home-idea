@@ -1,6 +1,16 @@
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import { SortableContext, rectSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import type { Item } from '../db';
 import { ItemCard } from './ItemCard';
 import { ImagePlus, SearchX } from 'lucide-react';
+import { reorderItem } from '../hooks';
 
 export function Gallery({
   items,
@@ -13,6 +23,24 @@ export function Gallery({
   onAddClick: () => void;
   isFiltering: boolean;
 }) {
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+  );
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = items.findIndex((i) => i.id === active.id);
+    const newIndex = items.findIndex((i) => i.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const reordered = arrayMove(items, oldIndex, newIndex);
+    const movedIndex = reordered.findIndex((i) => i.id === active.id);
+    const above = reordered[movedIndex - 1];
+    const below = reordered[movedIndex + 1];
+    await reorderItem(active.id as string, above, below);
+  };
+
   if (items.length === 0 && isFiltering) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 py-24 text-ink-light">
@@ -38,10 +66,14 @@ export function Gallery({
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4 p-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-      {items.map((item) => (
-        <ItemCard key={item.id} item={item} onClick={() => onItemClick(item.id)} />
-      ))}
-    </div>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <SortableContext items={items.map((i) => i.id)} strategy={rectSortingStrategy}>
+        <div className="grid grid-cols-2 gap-4 p-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          {items.map((item) => (
+            <ItemCard key={item.id} item={item} onClick={() => onItemClick(item.id)} />
+          ))}
+        </div>
+      </SortableContext>
+    </DndContext>
   );
 }

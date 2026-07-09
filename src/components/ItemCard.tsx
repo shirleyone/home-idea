@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Link2 } from 'lucide-react';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import type { Item } from '../db';
 import { useObjectUrl, domainFromUrl } from '../utils';
 
@@ -7,11 +9,23 @@ export function ItemCard({ item, onClick }: { item: Item; onClick: () => void })
   const imageUrl = useObjectUrl(item.image);
   const [remoteThumbnailFailed, setRemoteThumbnailFailed] = useState(false);
   const displayUrl = imageUrl ?? (!remoteThumbnailFailed ? item.linkThumbnailUrl : undefined);
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: item.id,
+  });
 
   return (
     <button
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+        zIndex: isDragging ? 10 : undefined,
+      }}
+      {...attributes}
+      {...listeners}
       onClick={onClick}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-white text-left shadow-sm transition-shadow hover:shadow-md"
+      className="group flex cursor-grab flex-col overflow-hidden rounded-2xl border border-line bg-white text-left shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing"
     >
       <div className="aspect-[4/3] w-full overflow-hidden bg-cream-dark">
         {displayUrl ? (

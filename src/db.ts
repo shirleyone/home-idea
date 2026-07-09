@@ -14,6 +14,7 @@ export interface Item {
   image?: Blob;
   createdAt: number;
   updatedAt: number;
+  order: number;
 }
 
 export interface Folder {
@@ -32,6 +33,19 @@ class InspirationDB extends Dexie {
       items: 'id, type, name, createdAt, *tags, *folderIds',
       folders: 'id, name, createdAt',
     });
+    this.version(2)
+      .stores({
+        items: 'id, type, name, createdAt, order, *tags, *folderIds',
+        folders: 'id, name, createdAt',
+      })
+      .upgrade(async (tx) => {
+        await tx
+          .table('items')
+          .toCollection()
+          .modify((item) => {
+            item.order = item.createdAt;
+          });
+      });
   }
 }
 

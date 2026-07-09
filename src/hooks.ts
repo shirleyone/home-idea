@@ -3,7 +3,7 @@ import { v4 as uuid } from 'uuid';
 import { db, type Item, type Folder } from './db';
 
 export function useItems() {
-  return useLiveQuery(() => db.items.orderBy('createdAt').reverse().toArray(), [], []);
+  return useLiveQuery(() => db.items.orderBy('order').reverse().toArray(), [], []);
 }
 
 export function useFolders() {
@@ -34,6 +34,7 @@ export async function addItem(input: {
     id: uuid(),
     createdAt: now,
     updatedAt: now,
+    order: now,
     tags: input.tags,
     folderIds: input.folderIds,
     name: input.name,
@@ -49,6 +50,20 @@ export async function addItem(input: {
 
 export async function updateItem(id: string, changes: Partial<Item>) {
   await db.items.update(id, { ...changes, updatedAt: Date.now() });
+}
+
+export async function reorderItem(id: string, above: Item | undefined, below: Item | undefined) {
+  // Items sort by `order` descending, so `above` (appears earlier) must end up
+  // with a larger order value than `below` (appears later).
+  const newOrder =
+    above && below
+      ? (above.order + below.order) / 2
+      : above
+        ? above.order - 1000
+        : below
+          ? below.order + 1000
+          : Date.now();
+  await db.items.update(id, { order: newOrder });
 }
 
 export async function deleteItem(id: string) {
