@@ -58,7 +58,7 @@ export function TagInput({
               key={t}
               type="button"
               onClick={() => onChange([...tags, t])}
-              className="rounded-full border border-line px-2.5 py-1 text-xs text-ink-light hover:border-sage hover:text-sage"
+              className="rounded-full border border-line px-2.5 py-1 text-xs text-ink-light hover:border-tag hover:text-tag"
             >
               + {t}
             </button>

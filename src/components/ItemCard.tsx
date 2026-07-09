@@ -76,7 +76,7 @@ export function ItemCard({
             {item.tags.slice(0, 3).map((t) => (
               <span
                 key={t}
-                className="rounded-full bg-sage-light px-2 py-0.5 text-xs text-ink-light"
+                className="rounded-full bg-tag px-2 py-0.5 text-xs text-white"
               >
                 {t}
               </span>

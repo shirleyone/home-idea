@@ -25,7 +25,7 @@ export function FolderPicker({
           className={`flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1 text-sm ${
             selected.includes(f.id)
               ? 'border-sky bg-sky-light text-ink'
-              : 'border-line text-ink-light hover:border-sky'
+              : 'border-line text-ink-light hover:border-tag hover:text-tag'
           }`}
         >
           <input

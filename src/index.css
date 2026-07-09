@@ -2,19 +2,22 @@
 
 @theme {
   --font-sans: "Noto Sans TC", "Hiragino Sans", system-ui, sans-serif;
+  --font-rounded: "Fredoka", "Noto Sans TC", system-ui, sans-serif;
 
-  --color-cream: #faf7f2;
-  --color-cream-dark: #f1ebe1;
-  --color-ink: #4a4640;
-  --color-ink-light: #8a8378;
-  --color-line: #e6ded2;
+  --color-cream: #fff8f0;
+  --color-cream-dark: #f7ede0;
+  --color-ink: #242423;
+  --color-ink-light: #454545;
+  --color-line: #e4e1ee;
 
-  --color-sage: #8fa693;
-  --color-sage-light: #eaf0ea;
-  --color-sky: #90a9bd;
-  --color-sky-light: #eaf0f5;
-  --color-sand: #cbb994;
-  --color-sand-light: #f5efe1;
+  --color-sage: #ffca3a;
+  --color-sage-light: #fff3d2;
+  --color-sky: #ff6ec7;
+  --color-sky-light: #ffe3f4;
+  --color-sand: #ffc233;
+  --color-sand-light: #fff3d2;
+
+  --color-tag: #f78154;
 }
 
 html,

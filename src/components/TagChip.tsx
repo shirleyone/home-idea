@@ -16,7 +16,7 @@ export function TagChip({
   const toneClasses = {
     sage: active
       ? 'bg-sage text-white border-sage'
-      : 'bg-sage-light text-ink border-transparent hover:border-sage',
+      : 'bg-tag text-white border-transparent hover:opacity-90',
     sky: active
       ? 'bg-sky text-white border-sky'
       : 'bg-sky-light text-ink border-transparent hover:border-sky',
