@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -9,6 +10,7 @@ import {
 import { SortableContext, rectSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import type { Item } from '../db';
 import { ItemCard } from './ItemCard';
+import { Lightbox } from './Lightbox';
 import { ImagePlus, SearchX } from 'lucide-react';
 import { reorderItem } from '../hooks';
 
@@ -26,6 +28,7 @@ export function Gallery({
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   );
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
@@ -70,10 +73,16 @@ export function Gallery({
       <SortableContext items={items.map((i) => i.id)} strategy={rectSortingStrategy}>
         <div className="grid grid-cols-2 gap-4 p-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {items.map((item) => (
-            <ItemCard key={item.id} item={item} onClick={() => onItemClick(item.id)} />
+            <ItemCard
+              key={item.id}
+              item={item}
+              onClick={() => onItemClick(item.id)}
+              onImageClick={setLightboxUrl}
+            />
           ))}
         </div>
       </SortableContext>
+      {lightboxUrl && <Lightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />}
     </DndContext>
   );
 }

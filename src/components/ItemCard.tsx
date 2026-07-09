@@ -1,11 +1,19 @@
 import { useState } from 'react';
-import { Link2 } from 'lucide-react';
+import { Link2, Maximize2 } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { Item } from '../db';
 import { domainFromUrl } from '../utils';
 
-export function ItemCard({ item, onClick }: { item: Item; onClick: () => void }) {
+export function ItemCard({
+  item,
+  onClick,
+  onImageClick,
+}: {
+  item: Item;
+  onClick: () => void;
+  onImageClick: (url: string) => void;
+}) {
   const [remoteThumbnailFailed, setRemoteThumbnailFailed] = useState(false);
   const displayUrl = item.imageUrl ?? (!remoteThumbnailFailed ? item.linkThumbnailUrl : undefined);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -26,14 +34,32 @@ export function ItemCard({ item, onClick }: { item: Item; onClick: () => void })
       onClick={onClick}
       className="group flex cursor-grab flex-col overflow-hidden rounded-2xl border border-line bg-white text-left shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing"
     >
-      <div className="aspect-[4/3] w-full overflow-hidden bg-cream-dark">
+      <div
+        className="group/image relative aspect-[4/3] w-full overflow-hidden bg-cream-dark"
+        onClick={
+          displayUrl
+            ? (e) => {
+                e.stopPropagation();
+                onImageClick(displayUrl);
+              }
+            : undefined
+        }
+      >
         {displayUrl ? (
-          <img
-            src={displayUrl}
-            alt={item.name}
-            onError={() => setRemoteThumbnailFailed(true)}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-          />
+          <>
+            <img
+              src={displayUrl}
+              alt={item.name}
+              onError={() => setRemoteThumbnailFailed(true)}
+              className="h-full w-full object-cover transition-transform duration-300 group-hover/image:scale-105"
+            />
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover/image:bg-black/20">
+              <Maximize2
+                size={20}
+                className="text-white opacity-0 transition-opacity group-hover/image:opacity-100"
+              />
+            </div>
+          </>
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-ink-light">
             <Link2 size={28} />

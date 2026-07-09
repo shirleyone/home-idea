@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { ExternalLink, Loader2, RefreshCw, Trash2 } from 'lucide-react';
+import { Check, ExternalLink, Loader2, RefreshCw, Trash2 } from 'lucide-react';
 import { Modal } from './Modal';
 import { TagInput } from './TagInput';
 import { FolderPicker } from './FolderPicker';
+import { Lightbox } from './Lightbox';
 import { updateItem, uploadImage } from '../hooks';
 import type { Folder, Item } from '../db';
 import { domainFromUrl, fetchLinkThumbnail } from '../utils';
@@ -26,11 +27,23 @@ export function ItemDrawer({
   const [folderIds, setFolderIds] = useState(item.folderIds);
   const [refetching, setRefetching] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [thumbnailFailed, setThumbnailFailed] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const displayUrl = item.imageUrl ?? (!thumbnailFailed ? item.linkThumbnailUrl : undefined);
 
   const save = async (changes: Partial<Item>) => {
     await updateItem(item.id, changes);
+  };
+
+  const handleSaveAndClose = async () => {
+    setSaving(true);
+    try {
+      await save({ name, note, tags, folderIds });
+      onClose();
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleRefetchThumbnail = async () => {
@@ -70,7 +83,8 @@ export function ItemDrawer({
               <img
                 src={displayUrl}
                 onError={() => setThumbnailFailed(true)}
-                className="h-full w-full object-cover"
+                onClick={() => setLightboxOpen(true)}
+                className="h-full w-full cursor-zoom-in object-cover"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-ink-light">
@@ -156,15 +170,28 @@ export function ItemDrawer({
             />
           </div>
 
-          <button
-            onClick={() => onDelete(item.id)}
-            className="mt-2 flex w-fit items-center gap-1.5 rounded-full border border-line px-4 py-2 text-sm text-ink-light hover:border-red-300 hover:text-red-500"
-          >
-            <Trash2 size={14} />
-            刪除
-          </button>
+          <div className="mt-2 flex items-center justify-between gap-3">
+            <button
+              onClick={() => onDelete(item.id)}
+              className="flex w-fit items-center gap-1.5 rounded-full border border-line px-4 py-2 text-sm text-ink-light hover:border-red-300 hover:text-red-500"
+            >
+              <Trash2 size={14} />
+              刪除
+            </button>
+            <button
+              onClick={handleSaveAndClose}
+              disabled={saving}
+              className="flex items-center gap-1.5 rounded-full bg-sage px-5 py-2 text-sm text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+            >
+              {saving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+              儲存
+            </button>
+          </div>
         </div>
       </div>
+      {lightboxOpen && displayUrl && (
+        <Lightbox url={displayUrl} alt={item.name} onClose={() => setLightboxOpen(false)} />
+      )}
     </Modal>
   );
 }
