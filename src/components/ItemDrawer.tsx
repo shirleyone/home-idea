@@ -40,7 +40,7 @@ export function ItemDrawer({
     setSaving(true);
     try {
       await save({ name, note, tags, folderIds });
-      onClose();
+      window.location.reload();
     } finally {
       setSaving(false);
     }

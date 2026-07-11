@@ -109,7 +109,7 @@ export function AddModal({
           image: draft.file,
         });
       }
-      onClose();
+      window.location.reload();
     } finally {
       setSaving(false);
     }
@@ -131,7 +131,7 @@ export function AddModal({
         linkThumbnailUrl: autoThumbnailUrl,
         image: linkImage ?? undefined,
       });
-      onClose();
+      window.location.reload();
     } finally {
       setSaving(false);
     }

@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Folder as FolderIcon, LogOut, Pencil, Plus, Tags, Trash2, X } from 'lucide-react';
+import { Folder as FolderIcon, LayoutGrid, LogOut, Pencil, Plus, Tags, Trash2, X } from 'lucide-react';
 import type { Folder } from '../db';
 import { addFolder, deleteFolder, renameFolder } from '../hooks';
 import { supabase } from '../supabaseClient';
 import { TagChip } from './TagChip';
+import { FlowerLogo } from './FlowerLogo';
 
 export function Sidebar({
   folders,
@@ -58,7 +59,10 @@ export function Sidebar({
   return (
     <div className="flex h-full w-64 shrink-0 flex-col gap-6 overflow-y-auto border-r border-line bg-cream p-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-medium text-ink">裝潢家居參考</h1>
+        <div className="flex items-center gap-2">
+          <FlowerLogo size={28} />
+          <span className="font-rounded text-lg font-semibold text-ink">DecoMinds</span>
+        </div>
         {onClose && (
           <button onClick={onClose} className="rounded-full p-1 hover:bg-cream-dark md:hidden">
             <X size={18} />
@@ -66,20 +70,22 @@ export function Sidebar({
         )}
       </div>
 
+      <button
+        onClick={() => onSelectFolder(null)}
+        className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+          selectedFolderId === null ? 'bg-sage-light text-ink' : 'text-ink-light hover:bg-cream-dark'
+        }`}
+      >
+        <LayoutGrid size={16} />
+        全部靈感
+      </button>
+
       <div>
         <div className="mb-2 flex items-center gap-2 text-sm font-medium text-ink-light">
           <FolderIcon size={16} />
           收藏夾
         </div>
         <div className="flex flex-col gap-1">
-          <button
-            onClick={() => onSelectFolder(null)}
-            className={`rounded-lg px-3 py-1.5 text-left text-sm transition-colors ${
-              selectedFolderId === null ? 'bg-sage-light text-ink' : 'text-ink-light hover:bg-cream-dark'
-            }`}
-          >
-            全部靈感
-          </button>
           {folders.map((f) =>
             editingId === f.id ? (
               <input

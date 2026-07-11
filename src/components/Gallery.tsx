@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -14,21 +14,54 @@ import { Lightbox } from './Lightbox';
 import { ImagePlus, SearchX } from 'lucide-react';
 import { reorderItem } from '../hooks';
 
+const PAGE_SIZE = 15;
+
 export function Gallery({
   items,
   onItemClick,
   onAddClick,
   isFiltering,
+  filterKey,
+  selectionMode = false,
+  selectedIds,
+  onToggleSelect,
 }: {
   items: Item[];
   onItemClick: (id: string) => void;
   onAddClick: () => void;
   isFiltering: boolean;
+  filterKey: string;
+  selectionMode?: boolean;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (id: string) => void;
 }) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   );
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [filterKey]);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, items.length));
+        }
+      },
+      { rootMargin: '400px' },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [items.length]);
+
+  const visibleItems = items.slice(0, visibleCount);
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
@@ -70,18 +103,22 @@ export function Gallery({
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <SortableContext items={items.map((i) => i.id)} strategy={rectSortingStrategy}>
+      <SortableContext items={visibleItems.map((i) => i.id)} strategy={rectSortingStrategy}>
         <div className="grid grid-cols-2 gap-4 p-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {items.map((item) => (
+          {visibleItems.map((item) => (
             <ItemCard
               key={item.id}
               item={item}
               onClick={() => onItemClick(item.id)}
               onImageClick={setLightboxUrl}
+              selectionMode={selectionMode}
+              selected={selectedIds?.has(item.id) ?? false}
+              onToggleSelect={() => onToggleSelect?.(item.id)}
             />
           ))}
         </div>
       </SortableContext>
+      {visibleCount < items.length && <div ref={sentinelRef} className="h-1 w-full" />}
       {lightboxUrl && <Lightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />}
     </DndContext>
   );

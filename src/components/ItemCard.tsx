@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link2, Maximize2, Pencil } from 'lucide-react';
+import { Check, Link2, Maximize2, Pencil } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { Item } from '../db';
@@ -9,16 +9,31 @@ export function ItemCard({
   item,
   onClick,
   onImageClick,
+  selectionMode = false,
+  selected = false,
+  onToggleSelect,
 }: {
   item: Item;
   onClick: () => void;
   onImageClick: (url: string) => void;
+  selectionMode?: boolean;
+  selected?: boolean;
+  onToggleSelect?: () => void;
 }) {
   const [remoteThumbnailFailed, setRemoteThumbnailFailed] = useState(false);
   const displayUrl = item.imageUrl ?? (!remoteThumbnailFailed ? item.linkThumbnailUrl : undefined);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
+    disabled: selectionMode,
   });
+
+  const handleCardClick = () => {
+    if (selectionMode) {
+      onToggleSelect?.();
+      return;
+    }
+    onClick();
+  };
 
   return (
     <button
@@ -29,15 +44,17 @@ export function ItemCard({
         opacity: isDragging ? 0.5 : 1,
         zIndex: isDragging ? 10 : undefined,
       }}
-      {...attributes}
-      {...listeners}
-      onClick={onClick}
-      className="group flex cursor-grab flex-col overflow-hidden rounded-2xl border border-line bg-white text-left shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing"
+      {...(selectionMode ? {} : attributes)}
+      {...(selectionMode ? {} : listeners)}
+      onClick={handleCardClick}
+      className={`group flex flex-col overflow-hidden rounded-2xl border bg-white text-left shadow-sm transition-shadow hover:shadow-md ${
+        selectionMode ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'
+      } ${selected ? 'border-sage ring-2 ring-sage' : 'border-line'}`}
     >
       <div
         className="group/image relative aspect-[4/3] w-full overflow-hidden bg-cream-dark"
         onClick={
-          displayUrl
+          displayUrl && !selectionMode
             ? (e) => {
                 e.stopPropagation();
                 onImageClick(displayUrl);
@@ -68,6 +85,15 @@ export function ItemCard({
             </span>
           </div>
         )}
+        {selectionMode && (
+          <div
+            className={`absolute left-2 top-2 flex h-6 w-6 items-center justify-center rounded-full border-2 shadow-sm ${
+              selected ? 'border-sage bg-sage text-white' : 'border-white bg-white/70 text-transparent'
+            }`}
+          >
+            <Check size={14} />
+          </div>
+        )}
       </div>
       <div className="relative flex flex-1 flex-col gap-2 p-3 pr-9">
         <p className="truncate text-sm font-medium text-ink">{item.name || '未命名'}</p>
@@ -86,15 +112,17 @@ export function ItemCard({
             )}
           </div>
         )}
-        <div
-          onClick={(e) => {
-            e.stopPropagation();
-            onClick();
-          }}
-          className="absolute bottom-2 right-2 rounded-full border border-line bg-white p-1.5 text-ink-light opacity-0 shadow-sm transition-opacity hover:border-sage hover:text-sage group-hover:opacity-100"
-        >
-          <Pencil size={13} />
-        </div>
+        {!selectionMode && (
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              onClick();
+            }}
+            className="absolute bottom-2 right-2 rounded-full border border-line bg-white p-1.5 text-ink-light opacity-0 shadow-sm transition-opacity hover:border-sage hover:text-sage group-hover:opacity-100"
+          >
+            <Pencil size={13} />
+          </div>
+        )}
       </div>
     </button>
   );
