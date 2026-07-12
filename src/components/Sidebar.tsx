@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Folder as FolderIcon, LayoutGrid, LogOut, Pencil, Plus, Tags, Trash2, X } from 'lucide-react';
 import type { Folder } from '../db';
-import { addFolder, deleteFolder, renameFolder } from '../hooks';
+import { addFolder, addTag, deleteFolder, renameFolder } from '../hooks';
 import { supabase } from '../supabaseClient';
 import { TagChip } from './TagChip';
 import { FlowerLogo } from './FlowerLogo';
@@ -14,6 +14,8 @@ export function Sidebar({
   selectedTags,
   onToggleTag,
   onOpenTagManager,
+  onFolderAdded,
+  onTagAdded,
   onClose,
   userEmail,
 }: {
@@ -24,10 +26,13 @@ export function Sidebar({
   selectedTags: string[];
   onToggleTag: (tag: string) => void;
   onOpenTagManager: () => void;
+  onFolderAdded?: () => void;
+  onTagAdded?: () => void;
   onClose?: () => void;
   userEmail?: string;
 }) {
   const [newFolderName, setNewFolderName] = useState('');
+  const [newTagName, setNewTagName] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
 
@@ -36,6 +41,15 @@ export function Sidebar({
     if (!name) return;
     await addFolder(name);
     setNewFolderName('');
+    onFolderAdded?.();
+  };
+
+  const handleAddTag = async () => {
+    const name = newTagName.trim();
+    if (!name || allTags.includes(name)) return;
+    await addTag(name);
+    setNewTagName('');
+    onTagAdded?.();
   };
 
   const startEdit = (f: Folder) => {
@@ -156,6 +170,21 @@ export function Sidebar({
               onClick={() => onToggleTag(tag)}
             />
           ))}
+        </div>
+        <div className="mt-2 flex gap-1">
+          <input
+            value={newTagName}
+            onChange={(e) => setNewTagName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
+            placeholder="新增標籤"
+            className="w-full rounded-lg border border-line bg-white px-2 py-1 text-sm outline-none focus:border-sage"
+          />
+          <button
+            onClick={handleAddTag}
+            className="rounded-lg border border-line bg-white p-1.5 text-ink-light hover:border-sage hover:text-sage"
+          >
+            <Plus size={16} />
+          </button>
         </div>
       </div>
 

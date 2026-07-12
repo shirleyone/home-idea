@@ -40,22 +40,19 @@ export function useItems() {
 export function useFolders() {
   const [folders, setFolders] = useState<Folder[] | undefined>(undefined);
 
-  useEffect(() => {
-    let active = true;
-
-    async function load() {
-      const { data, error } = await supabase
-        .from('folders')
-        .select('*')
-        .order('created_at', { ascending: true });
-      if (!active) return;
-      if (error) {
-        console.error(error);
-        return;
-      }
-      setFolders((data as FolderRow[]).map(rowToFolder));
+  const load = async () => {
+    const { data, error } = await supabase
+      .from('folders')
+      .select('*')
+      .order('created_at', { ascending: true });
+    if (error) {
+      console.error(error);
+      return;
     }
+    setFolders((data as FolderRow[]).map(rowToFolder));
+  };
 
+  useEffect(() => {
     load();
     const channel = supabase
       .channel(`folders-changes-${uuid()}`)
@@ -63,12 +60,12 @@ export function useFolders() {
       .subscribe();
 
     return () => {
-      active = false;
       supabase.removeChannel(channel);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return folders;
+  return [folders, load] as const;
 }
 
 export function useAllTags() {
@@ -76,6 +73,42 @@ export function useAllTags() {
   const set = new Set<string>();
   (items ?? []).forEach((it) => it.tags.forEach((t) => set.add(t)));
   return Array.from(set).sort((a, b) => a.localeCompare(b, 'zh-Hant'));
+}
+
+export function useTagRegistry() {
+  const [tags, setTags] = useState<string[] | undefined>(undefined);
+
+  const load = async () => {
+    const { data, error } = await supabase
+      .from('tags')
+      .select('name')
+      .order('created_at', { ascending: true });
+    if (error) {
+      console.error(error);
+      return;
+    }
+    setTags((data as { name: string }[]).map((r) => r.name));
+  };
+
+  useEffect(() => {
+    load();
+    const channel = supabase
+      .channel(`tags-changes-${uuid()}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tags' }, load)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return [tags, load] as const;
+}
+
+export async function addTag(name: string) {
+  const { error } = await supabase.from('tags').upsert({ name }, { onConflict: 'name' });
+  if (error) throw error;
 }
 
 export async function uploadImage(file: File | Blob, itemId: string, filename = 'image'): Promise<string> {
@@ -189,6 +222,8 @@ export async function renameTagEverywhere(oldTag: string, newTag: string) {
     const tags = Array.from(new Set(row.tags.map((t) => (t === oldTag ? newTag : t))));
     await supabase.from('items').update({ tags, updated_at: new Date().toISOString() }).eq('id', row.id);
   }
+  await supabase.from('tags').delete().eq('name', oldTag);
+  await supabase.from('tags').upsert({ name: newTag }, { onConflict: 'name' });
 }
 
 export async function deleteTagEverywhere(tag: string) {
@@ -198,6 +233,7 @@ export async function deleteTagEverywhere(tag: string) {
     const tags = row.tags.filter((t) => t !== tag);
     await supabase.from('items').update({ tags, updated_at: new Date().toISOString() }).eq('id', row.id);
   }
+  await supabase.from('tags').delete().eq('name', tag);
 }
 
 export async function addFolder(name: string) {

@@ -9,13 +9,29 @@ import { MigrationBanner } from './components/MigrationBanner';
 import { BulkTagModal } from './components/BulkTagModal';
 import { BulkFolderModal } from './components/BulkFolderModal';
 import { TypeTabs, type TypeFilter } from './components/TypeTabs';
-import { useAllTags, useFolders, useItems, deleteItem, restoreItem, updateItem } from './hooks';
+import {
+  useAllTags,
+  useFolders,
+  useItems,
+  useTagRegistry,
+  deleteItem,
+  restoreItem,
+  updateItem,
+} from './hooks';
 import type { Item } from './db';
 
 export function HomeApp({ userEmail }: { userEmail?: string }) {
   const items = useItems();
-  const folders = useFolders();
-  const allTags = useAllTags();
+  const [folders, refetchFolders] = useFolders();
+  const itemDerivedTags = useAllTags();
+  const [tagRegistry, refetchTags] = useTagRegistry();
+  const allTags = useMemo(
+    () =>
+      Array.from(new Set([...itemDerivedTags, ...(tagRegistry ?? [])])).sort((a, b) =>
+        a.localeCompare(b, 'zh-Hant'),
+      ),
+    [itemDerivedTags, tagRegistry],
+  );
 
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
@@ -161,6 +177,8 @@ export function HomeApp({ userEmail }: { userEmail?: string }) {
           selectedTags={selectedTags}
           onToggleTag={toggleTag}
           onOpenTagManager={() => setTagManagerOpen(true)}
+          onFolderAdded={refetchFolders}
+          onTagAdded={refetchTags}
           userEmail={userEmail}
         />
       </div>
@@ -178,6 +196,8 @@ export function HomeApp({ userEmail }: { userEmail?: string }) {
             selectedTags={selectedTags}
             onToggleTag={toggleTag}
             onOpenTagManager={() => setTagManagerOpen(true)}
+            onFolderAdded={refetchFolders}
+            onTagAdded={refetchTags}
             onClose={() => setSidebarOpen(false)}
             userEmail={userEmail}
           />
