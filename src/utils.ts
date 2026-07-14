@@ -32,7 +32,7 @@ export async function fetchLinkThumbnail(url: string): Promise<string | undefine
   }
 }
 
-const STYLE_TAGS = ['北歐', '現代簡約', '工業風', '日式簡約', '美式', '中式', '法式', '波西米亞', '溫馨鄉村'];
+const STYLE_TAGS = ['北歐', '簡約', '工業', '日式', '中式', '溫馨鄉村'];
 const ROOM_TAGS = ['客廳', '臥室', '廚房', '浴室', '玄關', '書房', '餐廳', '陽台'];
 const CATEGORY_TAGS = ['家具', '照明', '裝飾品', '五金配件', '窗簾', '地毯', '家電'];
 const PURPOSE_TAGS = ['收納', '點綴', '功能性', '採光'];
