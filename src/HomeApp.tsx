@@ -18,6 +18,7 @@ import {
   restoreItem,
   updateItem,
 } from './hooks';
+import { domainFromUrl } from './utils';
 import type { Item } from './db';
 
 export function HomeApp({ userEmail }: { userEmail?: string }) {
@@ -66,6 +67,19 @@ export function HomeApp({ userEmail }: { userEmail?: string }) {
   }, [items, typeFilter, selectedFolderId, selectedTags, search]);
 
   const activeItem = (items ?? []).find((i) => i.id === activeItemId) ?? null;
+
+  const linkDomainDefaults = useMemo(() => {
+    const map: Record<string, { tags: string[]; folderIds: string[]; updatedAt: number }> = {};
+    (items ?? []).forEach((item) => {
+      if (item.type !== 'link' || !item.linkUrl) return;
+      const domain = domainFromUrl(item.linkUrl);
+      const existing = map[domain];
+      if (!existing || item.updatedAt > existing.updatedAt) {
+        map[domain] = { tags: item.tags, folderIds: item.folderIds, updatedAt: item.updatedAt };
+      }
+    });
+    return map;
+  }, [items]);
 
   const handleDelete = async (id: string) => {
     setActiveItemId(null);
@@ -240,7 +254,12 @@ export function HomeApp({ userEmail }: { userEmail?: string }) {
       </div>
 
       {addOpen && (
-        <AddModal folders={folders ?? []} allTags={allTags ?? []} onClose={() => setAddOpen(false)} />
+        <AddModal
+          folders={folders ?? []}
+          allTags={allTags ?? []}
+          domainDefaults={linkDomainDefaults}
+          onClose={() => setAddOpen(false)}
+        />
       )}
 
       {activeItem && (

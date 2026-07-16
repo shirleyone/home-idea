@@ -5,7 +5,7 @@ import { TagInput } from './TagInput';
 import { FolderPicker } from './FolderPicker';
 import { addItem } from '../hooks';
 import type { Folder } from '../db';
-import { fetchLinkThumbnail, isValidHttpUrl } from '../utils';
+import { domainFromUrl, fetchLinkThumbnail, isValidHttpUrl } from '../utils';
 
 const MAX_BATCH = 10;
 
@@ -19,10 +19,12 @@ interface Draft {
 export function AddModal({
   folders,
   allTags,
+  domainDefaults,
   onClose,
 }: {
   folders: Folder[];
   allTags: string[];
+  domainDefaults: Record<string, { tags: string[]; folderIds: string[] }>;
   onClose: () => void;
 }) {
   const [mode, setMode] = useState<'image' | 'link'>('image');
@@ -39,6 +41,7 @@ export function AddModal({
   const [autoThumbnailUrl, setAutoThumbnailUrl] = useState<string | undefined>(undefined);
   const [thumbnailStatus, setThumbnailStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const lastFetchedUrl = useRef<string>('');
+  const lastSuggestedDomain = useRef<string>('');
 
   useEffect(() => {
     if (!isValidHttpUrl(linkUrl)) return;
@@ -53,6 +56,17 @@ export function AddModal({
     }, 600);
     return () => clearTimeout(handle);
   }, [linkUrl]);
+
+  useEffect(() => {
+    if (!isValidHttpUrl(linkUrl)) return;
+    const domain = domainFromUrl(linkUrl);
+    if (domain === lastSuggestedDomain.current) return;
+    lastSuggestedDomain.current = domain;
+    const defaults = domainDefaults[domain];
+    if (!defaults) return;
+    setLinkTags(defaults.tags);
+    setSharedFolderIds(defaults.folderIds);
+  }, [linkUrl, domainDefaults]);
 
   const refetchThumbnail = async () => {
     if (!isValidHttpUrl(linkUrl)) return;
